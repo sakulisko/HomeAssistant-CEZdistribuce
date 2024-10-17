@@ -1,0 +1,57 @@
+{
+    "name": "Home Assistant Cez HDO Development",
+    "image": "mcr.microsoft.com/devcontainers/python:3.12",
+    "forwardPorts": [
+        8123
+    ],
+    "portsAttributes": {
+        "8123": {
+            "label": "Home Assistant",
+            "onAutoForward": "notify"
+        }
+    },
+    "postCreateCommand": "scripts/setup",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "github.vscode-pull-request-github",
+                "ryanluker.vscode-coverage-gutters",
+                "ms-python.vscode-pylance",
+                "ms-python.pylint",
+                "visualstudioexptteam.vscodeintellicode",
+                "redhat.vscode-yaml",
+                "esbenp.prettier-vscode",
+                "eamodio.gitlens",
+                "mhutchie.git-graph"
+            ],
+            "settings": {
+                "files.eol": "\n",
+                "editor.tabSize": 4,
+                "python.pythonPath": "/usr/bin/python3",
+                "python.analysis.autoSearchPaths": false,
+                "python.formatting.provider": "black",
+                "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+                "python.testing.pytestArgs": [
+                    "--no-cov"
+                ],
+                "editor.formatOnPaste": false,
+                "editor.formatOnSave": true,
+                "editor.formatOnType": true,
+                "files.trimTrailingWhitespace": true,
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.autoComplete.extraPaths": [
+                    "${containerWorkspaceFolder}",
+                    "${containerWorkspaceFolder}/../home-connect-async"
+                ],
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/usr/bin/zsh"
+                    }
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+            }
+        },
+        "postCreateCommand": "pip install -r requirements.txt"
+    }
+}
