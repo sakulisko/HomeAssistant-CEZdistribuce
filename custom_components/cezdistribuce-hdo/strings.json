@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "region": "Region to check for low/high tarrif schedule",
+                    "command": "Comand used to switch tarrifs",
+                    "region2": "Region to check for low/high tarrif schedule"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        }
+    },
+    "selector": {
+        "region": {
+            "options": {
+                "vychod": "East Bohemia",
+                "stred": "Mid Bohemia",
+                "morava": "Moravia",
+                "sever": "North Bohemia",
+                "zapad": "West Bohemia"
+            }
+        }
+    }
+}
