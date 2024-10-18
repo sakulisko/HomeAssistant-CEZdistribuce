@@ -4,4 +4,29 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+
+export DEBIAN_FRONTEND=noninteractive
+sudo apt update
+sudo apt install -y --no-install-recommends \
+        bluez \
+        ffmpeg \
+        libudev-dev \
+        libavformat-dev \
+        libavcodec-dev \
+        libavdevice-dev \
+        libavutil-dev \
+        libgammu-dev \
+        libswscale-dev \
+        libswresample-dev \
+        libavfilter-dev \
+        libpcap-dev \
+        libturbojpeg0 \
+        libyaml-dev \
+        libxml2 \
+        git \
+        cmake
+
+sudo apt clean
+sudo rm -rf /var/lib/apt/lists/*
+
 python3 -m pip install --requirement requirements.txt
