@@ -32,6 +32,10 @@ async def async_setup_entry(
     config = CezHDOConfig.from_json(dict(config_entry.data))
 
     entities = []
+    entities.append(ConstantValueSensor(
+        "low_tarif_price", config.low_tarif_price))
+    entities.append(ConstantValueSensor(
+        "high_tarif_price", config.high_tarif_price))
     entities.append(CezDistribucePrice(hass, config))
     async_add_entities(entities)
 
@@ -41,6 +45,7 @@ class CezDistribucePrice(SensorEntity):
 
     def __init__(self, hass: HomeAssistant, cezHdoConfig: CezHDOConfig) -> None:
         """Initialize the sensor."""
+        self.hass = hass
         self._name = cezHdoConfig.region + "_" + cezHdoConfig.command + "_price"
         self.region = cezHdoConfig.region
         self.command = cezHdoConfig.command
@@ -58,21 +63,27 @@ class CezDistribucePrice(SensorEntity):
     @property
     def icon(self):
         "Sensor icon."
-        return "mdi:currency-usd"
+        return "mdi:cash"
 
     @property
     def native_value(self):
         "Return the current price based on the tariff."
         if self.responseJson and isHdo(self.responseJson):
-            return self.low_tarif_price
-        return self.high_tarif_price
+            other_sensor_state = self.hass.states.get('sensor.low_tarif_price')
+        else:
+            other_sensor_state = self.hass.states.get(
+                'sensor.high_tarif_price')
+        return other_sensor_state.state
+
+    @property
+    def native_unit_of_measurement(self):
+        "Currency."
+        return "Kč/kWh"
 
     @property
     def extra_state_attributes(self):
         "Additional attributes."
         attributes = {}
-        attributes["low_tarif_price"] = self.low_tarif_price
-        attributes["high_tarif_price"] = self.high_tarif_price
         tzinfo = ZoneInfo(self.hass.config.time_zone)
         now = datetime.now(tzinfo)
         start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -131,3 +142,52 @@ class CezDistribucePrice(SensorEntity):
             )
             self.last_update_success = True
             return
+
+
+class ConstantValueSensor(SensorEntity):
+    """Class representing a sensor with a constant value."""
+
+    def __init__(self, name: str, value: float) -> None:
+        """Initialize the sensor."""
+        self._name = name
+        self._value = value
+
+    @property
+    def name(self):
+        "Sensor name."
+        return self._name
+
+    @property
+    def icon(self):
+        "Sensor icon."
+        return "mdi:cash"
+
+    @property
+    def native_value(self):
+        "Return the constant value."
+        return self._value
+
+    @property
+    def should_poll(self):
+        "No polling needed for constant value."
+        return False
+
+    @property
+    def available(self):
+        "Always available."
+        return True
+
+    @property
+    def device_class(self):
+        "No device class."
+        return ""
+
+    @property
+    def unique_id(self):
+        "Unique name."
+        return "constant_value_" + self._name
+
+    @property
+    def native_unit_of_measurement(self):
+        "Currency."
+        return "Kč/kWh"
