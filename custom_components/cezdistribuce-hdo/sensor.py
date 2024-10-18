@@ -3,8 +3,9 @@
 This is for the Home Assistant integration.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,14 +32,14 @@ async def async_setup_entry(
     config = CezHDOConfig.from_json(dict(config_entry.data))
 
     entities = []
-    entities.append(CezDistribucePrice(config))
+    entities.append(CezDistribucePrice(hass, config))
     async_add_entities(entities)
 
 
 class CezDistribucePrice(SensorEntity):
     """Class representing the CEZ Distribuce price sensor."""
 
-    def __init__(self, cezHdoConfig: CezHDOConfig) -> None:
+    def __init__(self, hass: HomeAssistant, cezHdoConfig: CezHDOConfig) -> None:
         """Initialize the sensor."""
         self._name = cezHdoConfig.region + "_" + cezHdoConfig.command + "_price"
         self.region = cezHdoConfig.region
@@ -72,18 +73,17 @@ class CezDistribucePrice(SensorEntity):
         attributes = {}
         attributes["low_tarif_price"] = self.low_tarif_price
         attributes["high_tarif_price"] = self.high_tarif_price
-        now = datetime.now()
-        for hour in range(24):
-            hour_str = self._get_hour_str(now, hour)
+        tzinfo = ZoneInfo(self.hass.config.time_zone)
+        now = datetime.now(tzinfo)
+        start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        for hour in range(48):
+            hour_time = start_time + timedelta(hours=hour)
+            hour_str = hour_time.isoformat()
             is_on = self._is_tariff_on(now, hour)
             attributes[hour_str] = (
                 self.low_tarif_price if is_on else self.high_tarif_price
             )
         return attributes
-
-    def _get_hour_str(self, now, hour):
-        hour_time = now.replace(hour=hour, minute=0, second=0, microsecond=0)
-        return hour_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
     def _is_tariff_on(self, now, hour):
         is_on = False

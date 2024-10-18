@@ -4,6 +4,7 @@ __version__ = "0.2"
 
 from datetime import datetime, timedelta
 import logging
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -45,15 +46,16 @@ async def async_setup_entry(
     config = CezHDOConfig.from_json(dict(config_entry.data))
 
     entities = []
-    entities.append(CezDistribuceTarifState(config))
+    entities.append(CezDistribuceTarifState(hass, config))
     async_add_entities(entities)
 
 
 class CezDistribuceTarifState(BinarySensorEntity):
     "Sensor class."
 
-    def __init__(self, cezHdoConfig: CezHDOConfig) -> None:
+    def __init__(self, hass: HomeAssistant, cezHdoConfig: CezHDOConfig) -> None:
         """Initialize the sensor."""
+        self.hass = hass
         self._name = cezHdoConfig.region + "_" + cezHdoConfig.command
         self.region = cezHdoConfig.region
         self.command = cezHdoConfig.command
@@ -83,12 +85,13 @@ class CezDistribuceTarifState(BinarySensorEntity):
         "Additional attributes."
         attributes = {}
         # attributes["response_json"] = to_json(self.responseJson)
-        now = datetime.now()
+        tzinfo = ZoneInfo(self.hass.config.time_zone)
+        now = datetime.now(tzinfo)
+        start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
         # is_on = False
-        for hour in range(24):
-            hour_time = now.replace(
-                hour=hour, minute=0, second=0, microsecond=0)
-            hour_str = hour_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        for hour in range(48):
+            hour_time = start_time + timedelta(hours=hour)
+            hour_str = hour_time.isoformat()
             attributes[hour_str] = self._is_hour_on(hour, now)
         return attributes
 
