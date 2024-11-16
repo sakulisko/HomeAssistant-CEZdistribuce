@@ -90,25 +90,27 @@ class CezDistribucePrice(SensorEntity):
         for hour in range(48):
             hour_time = start_time + timedelta(hours=hour)
             hour_str = hour_time.isoformat()
-            is_on = self._is_tariff_on(now, hour)
+            is_on = self._is_tariff_on(now, hour_time)
             attributes[hour_str] = (
                 self.low_tarif_price if is_on else self.high_tarif_price
             )
         return attributes
 
-    def _is_tariff_on(self, now, hour):
+    def _is_tariff_on(self, now: datetime, hour: datetime) -> bool:
+        """Determine if the sensor is on for a specific hour."""
         is_on = False
         for data_entry in self.responseJson.data:
             if data_entry.isDayInRange(day_to_cz_abbrev(now.weekday())):
-                timesDict = data_entry.timesList()
-                for key, value in timesDict.items():
-                    hour_time = datetime.strptime(value, "%H:%M").time()
-                    if hour_time.hour == hour:
-                        if isTurnOnParameter(key):
-                            is_on = True
-                        elif isTurnOffParameter(key):
-                            is_on = False
-        return is_on
+                times_dict = data_entry.timeRanges()
+                for start, end in times_dict:
+                    start_time = datetime.strptime(start, "%H:%M").time()
+                    end_time = datetime.strptime(end, "%H:%M").time()
+                    is_on = start_time <= hour.time() < end_time
+                    if is_on:
+                        return is_on
+                return is_on
+
+        return False
 
     @property
     def should_poll(self):
